@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird - Customizable</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #4EC0CA 0%, #4EC0CA 80%, #DED895 80%, #DED895 100%);
+            font-family: 'Arial', sans-serif;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 400px;
+            height: 600px;
+            border: 3px solid #333;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #4EC0CA 0%, #4EC0CA 80%, #DED895 80%, #DED895 100%);
+        }
+
+        body.fullscreen #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            border: none;
+        }
+
+        #bird {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #FFD700;
+            border-radius: 50%;
+            left: 80px;
+            transition: transform 0.1s;
+            z-index: 5;
+            background-size: cover;
+            background-position: center;
+        }
+
+        #bird.default::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 15px;
+            background: #FF6347;
+            right: -10px;
+            top: 12px;
+            border-radius: 0 10px 10px 0;
+        }
+
+        #bird.default::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #000;
+            border-radius: 50%;
+            top: 12px;
+            left: 25px;
+        }
+
+        .pipe {
+            position: absolute;
+            width: 60px;
+            background: #5CB85C;
+            border: 3px solid #2E7D32;
+            border-radius: 5px;
+            z-index: 2;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .pipe-top {
+            top: 0;
+        }
+
+        .pipe-bottom {
+            bottom: 0;
+        }
+
+        .coin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle at 30% 30%, #FFD700, #FFA500);
+            border-radius: 50%;
+            border: 3px solid #FF8C00;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #FF8C00;
+            font-size: 20px;
+            animation: coinRotate 2s linear infinite;
+        }
+
+        @keyframes coinRotate {
+            0%, 100% { transform: rotateY(0deg); }
+            50% { transform: rotateY(180deg); }
+        }
+
+        #scoreBoard {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+        }
+
+        #score {
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+
+        #coins {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #fullscreenBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #fff;
+            z-index: 10;
+        }
+
+        #fullscreenBtn:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0,0,0,0.9);
+            padding: 30px;
+            border-radius: 10px;
+            display: none;
+            z-index: 20;
+            max-width: 90%;
+        }
+
+        #gameOverImage {
+            max-width: 200px;
+            max-height: 200px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        #gameOver h2 {
+            color: #fff;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        #gameOver p {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        #gameOver button {
+            padding: 12px 30px;
+            font-size: 20px;
+            background: #FFD700;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        #gameOver button:hover {
+            background: #FFA500;
+        }
+
+        #startScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 15;
+            background: rgba(0,0,0,0.8);
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 90%;
+            max-height: 90%;
+            overflow-y: auto;
+        }
+
+        #startScreen h1 {
+            color: #fff;
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+        }
+
+        #startScreen p {
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .customization-section {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .customization-section h3 {
+            color: #FFD700;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .customization-section label {
+            color: #fff;
+            display: block;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .customization-section input[type="file"] {
+            margin: 5px 0;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        #startScreen button {
+            padding: 15px 40px;
+            font-size: 24px;
+            background: #FFD700;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        #startScreen button:hover {
+            background: #FFA500;
+        }
+
+        .audio-control {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 2px solid #fff;
+            border-radius: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #fff;
+            z-index: 10;
+        }
+
+        .audio-control:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <button id="fullscreenBtn" onclick="toggleFullscreen()">⛶</button>
+        <button id="audioControl" class="audio-control" onclick="toggleAudio()">🔊</button>
+        <div id="bird" class="default"></div>
+        <div id="scoreBoard">
+            <div id="score">Score: 0</div>
+            <div id="coins">💰 Coins: 0</div>
+        </div>
+        <div id="startScreen">
+            <h1>Flappy Bird</h1>
+            <p>Customize your game and collect coins!</p>
+            
+            <div class="customization-section">
+                <h3>🐦 Customize Bird</h3>
+                <label>
+                    Upload Bird Image (PNG/JPG):
+                    <input type="file" id="birdImage" accept="image/*">
+                </label>
+            </div>
+
+            <div class="customization-section">
+                <h3>🌳 Customize Pipes</h3>
+                <label>
+                    Upload Pipe Image (PNG/JPG):
+                    <input type="file" id="pipeImage" accept="image/*">
+                </label>
+            </div>
+
+            <div class="customization-section">
+                <h3>💀 Game Over Customization</h3>
+                <label>
+                    Upload Game Over Image (PNG/JPG):
+                    <input type="file" id="gameOverImageFile" accept="image/*">
+                </label>
+                <label>
+                    Upload Game Over Sound (MP3/WAV):
+                    <input type="file" id="gameOverSound" accept="audio/*">
+                </label>
+            </div>
+
+            <div class="customization-section">
+                <h3>🎵 Background Music</h3>
+                <label>
+                    Upload Background Music (MP3/WAV):
+                    <input type="file" id="bgMusic" accept="audio/*">
+                </label>
+            </div>
+
+            <button onclick="startGame()">Start Game</button>
+        </div>
+        <div id="gameOver">
+            <img id="gameOverImage" alt="Game Over">
+            <h2>Game Over!</h2>
+            <p id="finalScore">Score: 0</p>
+            <p id="finalCoins">Coins: 0</p>
+            <button onclick="restartGame()">Play Again</button>
+            <button onclick="showCustomization()" style="margin-left: 10px;">Customize</button>
+        </div>
+    </div>
+
+    <script>
+        const bird = document.getElementById('bird');
+        const gameContainer = document.getElementById('gameContainer');
+        const scoreDisplay = document.getElementById('score');
+        const coinsDisplay = document.getElementById('coins');
+        const gameOverScreen = document.getElementById('gameOver');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const finalCoinsDisplay = document.getElementById('finalCoins');
+        const startScreen = document.getElementById('startScreen');
+        const gameOverImage = document.getElementById('gameOverImage');
+        const audioControl = document.getElementById('audioControl');
+
+        let birdY = 250;
+        let birdVelocity = 0;
+        let gravity = 0.5;
+        let jumpStrength = -9;
+        let gameRunning = false;
+        let score = 0;
+        let coins = 0;
+        let pipes = [];
+        let coinObjects = [];
+        let gameLoop;
+        let pipeInterval;
+        let containerWidth = 400;
+        let containerHeight = 600;
+
+        let customBirdImage = null;
+        let customPipeImage = null;
+        let customGameOverImage = null;
+        let customGameOverSound = null;
+        let customBgMusic = null;
+        let bgMusicAudio = null;
+        let audioMuted = false;
+
+        document.getElementById('birdImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    customBirdImage = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('pipeImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    customPipeImage = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('gameOverImageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    customGameOverImage = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('gameOverSound').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    customGameOverSound = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('bgMusic').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    customBgMusic = event.target.result;
+                    if (bgMusicAudio) {
+                        bgMusicAudio.pause();
+                        bgMusicAudio = null;
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function updateDimensions() {
+            const rect = gameContainer.getBoundingClientRect();
+            containerWidth = rect.width;
+            containerHeight = rect.height;
+        }
+
+        function startGame() {
+            updateDimensions();
+            startScreen.style.display = 'none';
+            gameRunning = true;
+            birdY = containerHeight / 2;
+            birdVelocity = 0;
+            score = 0;
+            coins = 0;
+            pipes = [];
+            coinObjects = [];
+            scoreDisplay.textContent = 'Score: ' + score;
+            coinsDisplay.textContent = '💰 Coins: ' + coins;
+            
+            if (customBirdImage) {
+                bird.style.backgroundImage = `url(${customBirdImage})`;
+                bird.classList.remove('default');
+            } else {
+                bird.style.backgroundImage = '';
+                bird.classList.add('default');
+            }
+            
+            document.querySelectorAll('.pipe').forEach(p => p.remove());
+            document.querySelectorAll('.coin').forEach(c => c.remove());
+            
+            if (customBgMusic && !audioMuted) {
+                playBackgroundMusic();
+            }
+            
+            gameLoop = setInterval(update, 20);
+            pipeInterval = setInterval(createPipe, 2000);
+            createPipe();
+        }
+
+        function playBackgroundMusic() {
+            if (bgMusicAudio) {
+                bgMusicAudio.pause();
+            }
+            bgMusicAudio = new Audio(customBgMusic);
+            bgMusicAudio.loop = true;
+            bgMusicAudio.volume = 0.3;
+            bgMusicAudio.play().catch(e => console.log('Audio play failed:', e));
+        }
+
+        function toggleAudio() {
+            audioMuted = !audioMuted;
+            audioControl.textContent = audioMuted ? '🔇' : '🔊';
+            
+            if (bgMusicAudio) {
+                if (audioMuted) {
+                    bgMusicAudio.pause();
+                } else {
+                    bgMusicAudio.play().catch(e => console.log('Audio play failed:', e));
+                }
+            }
+        }
+
+        function showCustomization() {
+            gameOverScreen.style.display = 'none';
+            startScreen.style.display = 'block';
+        }
+
+        function restartGame() {
+            gameOverScreen.style.display = 'none';
+            startGame();
+        }
+
+        function update() {
+            if (!gameRunning) return;
+
+            birdVelocity += gravity;
+            birdY += birdVelocity;
+            bird.style.top = birdY + 'px';
+
+            let rotation = Math.min(Math.max(birdVelocity * 3, -30), 90);
+            bird.style.transform = `rotate(${rotation}deg)`;
+
+            if (birdY > containerHeight - 40 || birdY < 0) {
+                endGame();
+                return;
+            }
+
+            pipes.forEach((pipe, index) => {
+                pipe.x -= 3;
+                pipe.top.style.left = pipe.x + 'px';
+                pipe.bottom.style.left = pipe.x + 'px';
+
+                if (pipe.x < 120 && pipe.x > 20) {
+                    if (birdY < pipe.gap || birdY > pipe.gap + 150) {
+                        endGame();
+                        return;
+                    }
+                }
+
+                if (!pipe.scored && pipe.x + 60 < 80) {
+                    score++;
+                    scoreDisplay.textContent = 'Score: ' + score;
+                    pipe.scored = true;
+                }
+
+                if (pipe.x < -60) {
+                    pipe.top.remove();
+                    pipe.bottom.remove();
+                    pipes.splice(index, 1);
+                }
+            });
+
+            coinObjects.forEach((coin, index) => {
+                coin.x -= 3;
+                coin.element.style.left = coin.x + 'px';
+
+                const birdCenterX = 80 + 20;
+                const birdCenterY = birdY + 20;
+                const coinCenterX = coin.x + 15;
+                const coinCenterY = coin.y + 15;
+                const distance = Math.sqrt(
+                    Math.pow(birdCenterX - coinCenterX, 2) + 
+                    Math.pow(birdCenterY - coinCenterY, 2)
+                );
+
+                if (distance < 30 && !coin.collected) {
+                    coin.collected = true;
+                    coin.element.remove();
+                    coins++;
+                    score += 5;
+                    coinsDisplay.textContent = '💰 Coins: ' + coins;
+                    scoreDisplay.textContent = 'Score: ' + score;
+                    coinObjects.splice(index, 1);
+                }
+
+                if (coin.x < -30) {
+                    coin.element.remove();
+                    coinObjects.splice(index, 1);
+                }
+            });
+        }
+
+        function createPipe() {
+            if (!gameRunning) return;
+
+            const gap = 150;
+            const minHeight = 50;
+            const maxHeight = containerHeight - gap - 100;
+            const topHeight = Math.floor(Math.random() * (maxHeight - minHeight) + minHeight);
+
+            const pipeTop = document.createElement('div');
+            pipeTop.className = 'pipe pipe-top';
+            pipeTop.style.height = topHeight + 'px';
+            pipeTop.style.left = containerWidth + 'px';
+            if (customPipeImage) {
+                pipeTop.style.backgroundImage = `url(${customPipeImage})`;
+                pipeTop.style.border = 'none';
+            }
+
+            const pipeBottom = document.createElement('div');
+            pipeBottom.className = 'pipe pipe-bottom';
+            pipeBottom.style.height = (containerHeight - topHeight - gap) + 'px';
+            pipeBottom.style.left = containerWidth + 'px';
+            if (customPipeImage) {
+                pipeBottom.style.backgroundImage = `url(${customPipeImage})`;
+                pipeBottom.style.border = 'none';
+            }
+
+            gameContainer.appendChild(pipeTop);
+            gameContainer.appendChild(pipeBottom);
+
+            pipes.push({
+                x: containerWidth,
+                gap: topHeight,
+                top: pipeTop,
+                bottom: pipeBottom,
+                scored: false
+            });
+
+            if (Math.random() > 0.5) {
+                createCoin(topHeight + gap / 2);
+            }
+        }
+
+        function createCoin(yPosition) {
+            const coin = document.createElement('div');
+            coin.className = 'coin';
+            coin.textContent = '$';
+            coin.style.left = containerWidth + 'px';
+            coin.style.top = (yPosition - 15) + 'px';
+            
+            gameContainer.appendChild(coin);
+            
+            coinObjects.push({
+                x: containerWidth,
+                y: yPosition - 15,
+                element: coin,
+                collected: false
+            });
+        }
+
+        function jump() {
+            if (!gameRunning) return;
+            birdVelocity = jumpStrength;
+        }
+
+        function endGame() {
+            gameRunning = false;
+            clearInterval(gameLoop);
+            clearInterval(pipeInterval);
+            
+            if (bgMusicAudio) {
+                bgMusicAudio.pause();
+            }
+            
+            if (customGameOverSound && !audioMuted) {
+                const gameOverAudio = new Audio(customGameOverSound);
+                gameOverAudio.volume = 0.5;
+                gameOverAudio.play().catch(e => console.log('Audio play failed:', e));
+            }
+            
+            if (customGameOverImage) {
+                gameOverImage.src = customGameOverImage;
+                gameOverImage.style.display = 'block';
+            } else {
+                gameOverImage.style.display = 'none';
+            }
+            
+            finalScoreDisplay.textContent = 'Score: ' + score;
+            finalCoinsDisplay.textContent = 'Coins: ' + coins;
+            gameOverScreen.style.display = 'block';
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.body.requestFullscreen().then(() => {
+                    document.body.classList.add('fullscreen');
+                    updateDimensions();
+                }).catch(err => {
+                    console.log('Fullscreen error:', err);
+                });
+            } else {
+                document.exitFullscreen().then(() => {
+                    document.body.classList.remove('fullscreen');
+                    updateDimensions();
+                });
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                document.body.classList.remove('fullscreen');
+                updateDimensions();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                jump();
+            }
+        });
+
+        gameContainer.addEventListener('click', (e) => {
+            if (e.target.id !== 'fullscreenBtn' && e.target.id !== 'audioControl' && gameRunning) {
+                jump();
+            }
+        });
+    </script>
+</body>
+</html>
