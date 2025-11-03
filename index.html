@@ -27,6 +27,8 @@
             border: 3px solid #333;
             overflow: hidden;
             background: linear-gradient(to bottom, #4EC0CA 0%, #4EC0CA 80%, #DED895 80%, #DED895 100%);
+            background-size: cover;
+            background-position: center;
         }
 
         body.fullscreen #gameContainer {
@@ -119,18 +121,45 @@
         }
 
         #score {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: bold;
             color: #fff;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
-        #coins {
+        #level {
             font-size: 24px;
             font-weight: bold;
             color: #FFD700;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 5px;
+        }
+
+        #coins {
+            font-size: 20px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        #progressBar {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            width: 200px;
+            height: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        #progressFill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            width: 0%;
+            transition: width 0.3s;
         }
 
         #fullscreenBtn {
@@ -192,10 +221,58 @@
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
-            margin-top: 10px;
+            margin: 5px;
         }
 
         #gameOver button:hover {
+            background: #FFA500;
+        }
+
+        #levelComplete {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0,200,0,0.95);
+            padding: 40px;
+            border-radius: 15px;
+            display: none;
+            z-index: 25;
+            max-width: 90%;
+            animation: celebrate 0.5s ease-in-out;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        #levelComplete h2 {
+            color: #fff;
+            font-size: 42px;
+            margin-bottom: 15px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+        }
+
+        #levelComplete p {
+            color: #fff;
+            font-size: 26px;
+            margin-bottom: 10px;
+        }
+
+        #levelComplete button {
+            padding: 15px 35px;
+            font-size: 22px;
+            background: #FFD700;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        #levelComplete button:hover {
             background: #FFA500;
         }
 
@@ -249,10 +326,19 @@
             font-size: 14px;
         }
 
-        .customization-section input[type="file"] {
+        .customization-section input[type="file"],
+        .customization-section input[type="number"] {
             margin: 5px 0;
             color: #fff;
             font-size: 12px;
+        }
+
+        .customization-section input[type="number"] {
+            padding: 5px;
+            width: 100px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid #fff;
+            border-radius: 4px;
         }
 
         #startScreen button {
@@ -295,13 +381,25 @@
         <button id="audioControl" class="audio-control" onclick="toggleAudio()">🔊</button>
         <div id="bird" class="default"></div>
         <div id="scoreBoard">
+            <div id="level">Level: 1</div>
             <div id="score">Score: 0</div>
             <div id="coins">💰 Coins: 0</div>
         </div>
+        <div id="progressBar">
+            <div id="progressFill"></div>
+        </div>
         <div id="startScreen">
             <h1>Flappy Bird</h1>
-            <p>Customize your game and collect coins!</p>
+            <p>Customize your game and complete levels!</p>
             
+            <div class="customization-section">
+                <h3>🎨 Customize Background</h3>
+                <label>
+                    Upload Background Image (PNG/JPG):
+                    <input type="file" id="backgroundImage" accept="image/*">
+                </label>
+            </div>
+
             <div class="customization-section">
                 <h3>🐦 Customize Bird</h3>
                 <label>
@@ -338,15 +436,30 @@
                 </label>
             </div>
 
+            <div class="customization-section">
+                <h3>🎯 Level Settings</h3>
+                <label>
+                    Points needed to complete each level:
+                    <input type="number" id="levelTarget" min="5" max="100" value="10">
+                </label>
+            </div>
+
             <button onclick="startGame()">Start Game</button>
+        </div>
+        <div id="levelComplete">
+            <h2>🎉 Level Complete! 🎉</h2>
+            <p id="completedLevel">Level 1 Completed!</p>
+            <p id="levelStats">Score: 0 | Coins: 0</p>
+            <button onclick="nextLevel()">Next Level</button>
         </div>
         <div id="gameOver">
             <img id="gameOverImage" alt="Game Over">
             <h2>Game Over!</h2>
+            <p id="finalLevel">Level: 1</p>
             <p id="finalScore">Score: 0</p>
             <p id="finalCoins">Coins: 0</p>
             <button onclick="restartGame()">Play Again</button>
-            <button onclick="showCustomization()" style="margin-left: 10px;">Customize</button>
+            <button onclick="showCustomization()">Customize</button>
         </div>
     </div>
 
@@ -354,10 +467,14 @@
         const bird = document.getElementById('bird');
         const gameContainer = document.getElementById('gameContainer');
         const scoreDisplay = document.getElementById('score');
+        const levelDisplay = document.getElementById('level');
         const coinsDisplay = document.getElementById('coins');
+        const progressFill = document.getElementById('progressFill');
         const gameOverScreen = document.getElementById('gameOver');
+        const levelCompleteScreen = document.getElementById('levelComplete');
         const finalScoreDisplay = document.getElementById('finalScore');
         const finalCoinsDisplay = document.getElementById('finalCoins');
+        const finalLevelDisplay = document.getElementById('finalLevel');
         const startScreen = document.getElementById('startScreen');
         const gameOverImage = document.getElementById('gameOverImage');
         const audioControl = document.getElementById('audioControl');
@@ -369,6 +486,9 @@
         let gameRunning = false;
         let score = 0;
         let coins = 0;
+        let currentLevel = 1;
+        let levelScore = 0;
+        let levelTarget = 10;
         let pipes = [];
         let coinObjects = [];
         let gameLoop;
@@ -378,11 +498,23 @@
 
         let customBirdImage = null;
         let customPipeImage = null;
+        let customBackgroundImage = null;
         let customGameOverImage = null;
         let customGameOverSound = null;
         let customBgMusic = null;
         let bgMusicAudio = null;
         let audioMuted = false;
+
+        document.getElementById('backgroundImage').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    customBackgroundImage = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
         document.getElementById('birdImage').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -443,6 +575,10 @@
             }
         });
 
+        document.getElementById('levelTarget').addEventListener('change', function(e) {
+            levelTarget = parseInt(e.target.value) || 10;
+        });
+
         function updateDimensions() {
             const rect = gameContainer.getBoundingClientRect();
             containerWidth = rect.width;
@@ -457,10 +593,20 @@
             birdVelocity = 0;
             score = 0;
             coins = 0;
+            currentLevel = 1;
+            levelScore = 0;
             pipes = [];
             coinObjects = [];
             scoreDisplay.textContent = 'Score: ' + score;
             coinsDisplay.textContent = '💰 Coins: ' + coins;
+            levelDisplay.textContent = 'Level: ' + currentLevel;
+            updateProgress();
+            
+            if (customBackgroundImage) {
+                gameContainer.style.backgroundImage = `url(${customBackgroundImage})`;
+            } else {
+                gameContainer.style.backgroundImage = '';
+            }
             
             if (customBirdImage) {
                 bird.style.backgroundImage = `url(${customBirdImage})`;
@@ -515,6 +661,48 @@
             startGame();
         }
 
+        function nextLevel() {
+            levelCompleteScreen.style.display = 'none';
+            currentLevel++;
+            levelScore = 0;
+            levelDisplay.textContent = 'Level: ' + currentLevel;
+            updateProgress();
+            
+            birdY = containerHeight / 2;
+            birdVelocity = 0;
+            pipes = [];
+            coinObjects = [];
+            
+            document.querySelectorAll('.pipe').forEach(p => p.remove());
+            document.querySelectorAll('.coin').forEach(c => c.remove());
+            
+            gameRunning = true;
+            gameLoop = setInterval(update, 20);
+            pipeInterval = setInterval(createPipe, Math.max(1500 - currentLevel * 100, 1000));
+            createPipe();
+        }
+
+        function updateProgress() {
+            const progress = Math.min((levelScore / levelTarget) * 100, 100);
+            progressFill.style.width = progress + '%';
+        }
+
+        function checkLevelComplete() {
+            if (levelScore >= levelTarget) {
+                completeLevel();
+            }
+        }
+
+        function completeLevel() {
+            gameRunning = false;
+            clearInterval(gameLoop);
+            clearInterval(pipeInterval);
+            
+            document.getElementById('completedLevel').textContent = `Level ${currentLevel} Completed!`;
+            document.getElementById('levelStats').textContent = `Score: ${score} | Coins: ${coins}`;
+            levelCompleteScreen.style.display = 'block';
+        }
+
         function update() {
             if (!gameRunning) return;
 
@@ -544,7 +732,10 @@
 
                 if (!pipe.scored && pipe.x + 60 < 80) {
                     score++;
+                    levelScore++;
                     scoreDisplay.textContent = 'Score: ' + score;
+                    updateProgress();
+                    checkLevelComplete();
                     pipe.scored = true;
                 }
 
@@ -573,8 +764,11 @@
                     coin.element.remove();
                     coins++;
                     score += 5;
+                    levelScore += 5;
                     coinsDisplay.textContent = '💰 Coins: ' + coins;
                     scoreDisplay.textContent = 'Score: ' + score;
+                    updateProgress();
+                    checkLevelComplete();
                     coinObjects.splice(index, 1);
                 }
 
@@ -588,7 +782,7 @@
         function createPipe() {
             if (!gameRunning) return;
 
-            const gap = 150;
+            const gap = Math.max(150 - currentLevel * 5, 120);
             const minHeight = 50;
             const maxHeight = containerHeight - gap - 100;
             const topHeight = Math.floor(Math.random() * (maxHeight - minHeight) + minHeight);
@@ -671,6 +865,7 @@
                 gameOverImage.style.display = 'none';
             }
             
+            finalLevelDisplay.textContent = 'Level: ' + currentLevel;
             finalScoreDisplay.textContent = 'Score: ' + score;
             finalCoinsDisplay.textContent = 'Coins: ' + coins;
             gameOverScreen.style.display = 'block';
